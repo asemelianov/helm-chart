@@ -1,0 +1,61 @@
+{{- $kindName := include "formatName" (print .Release.Name) -}}
+{{- $templateMetadata := omit (fromYaml (include "metadata" .)) "namespace" -}}
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  {{- include "metadata" . | nindent 2 }}
+  name: {{ $kindName | toYaml }}
+spec:
+  {{- if not .Values.autoscaling.enabled }}
+  replicas: {{ .Values.replicaCount }}
+  {{- end }}
+  selector:
+    matchLabels:
+      {{- include "selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      {{- with .Values.podAnnotations }}
+      annotations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      labels:
+        {{- include "selectorLabels" . | nindent 8 }}
+    spec:
+      serviceAccountName: default
+      securityContext:
+        {{- toYaml .Values.podSecurityContext | nindent 8 }}
+
+# containers
+      containers:
+        - name: app
+          envFrom:
+          - configMapRef:
+              name: {{ $kindName | toYaml }}
+          securityContext:
+            {{- toYaml .Values.securityContext | nindent 12 }}
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+#          command: ["npm","run","start"]
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          ports:
+            - name: http
+              containerPort: 3000
+              protocol: TCP
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.imagePullSecrets}}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8}}
+      {{- end}}

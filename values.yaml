@@ -1,0 +1,78 @@
+domain: # main domain
+
+ingress:
+  enabled: true
+  className: nginx
+  annotations:
+    nginx.ingress.kubernetes.io/cors-allow-credentials: "true"
+    nginx.ingress.kubernetes.io/cors-allow-headers: Access-Control-Allow-Headers,Origin,Accept,X-Requested-With,Content-Type,Access-Control-Request-Method,Access-Control-Request-Headers,client-type,authorization,x-device-type,x-device-id,X-INSTANA-T,X-INSTANA-S,X-INSTANA-L,x-session-id,x-a-uid,x-a-session-id,x-auth-source
+    nginx.ingress.kubernetes.io/cors-allow-methods: PUT, GET, POST, OPTIONS, DELETE, PATCH
+    nginx.ingress.kubernetes.io/enable-cors: "true"
+  path:
+  host:
+  cors_origin: $http_origin
+
+# Secret Env vars:
+# Should be putted to secret with name in  secretEnvVars:
+
+envs:
+  app:
+    url: ""
+    key: ""
+    target: development
+
+###
+image:
+  repository: ""
+  tag: ""
+  pullPolicy: IfNotPresent
+
+imagePullSecrets:
+- name: ""
+
+nameOverride: ""
+fullnameOverride: ""
+
+serviceAccount:
+  # Specifies whether a service account should be created
+  create: false
+  # Annotations to add to the service account
+  annotations: {}
+  # The name of the service account to use.
+  # If not set and create is true, a name is generated using the fullname template
+  name: ""
+
+podSecurityContext: {}
+# fsGroup: 2000
+
+securityContext: {}
+# capabilities:
+#   drop:
+#   - ALL
+# readOnlyRootFilesystem: true
+# runAsNonRoot: true
+# runAsUser: 1000
+
+service:
+  type: ClusterIP
+  port: 3000
+
+serviceRefactor:
+  ports:
+  - name: one
+    port: 3000
+    protocol: TCP
+    targetPort: 3000
+
+autoscaling:
+  enabled: false
+  minReplicas: 1
+  maxReplicas: 8
+  targetCPUUtilizationPercentage: 80
+  # targetMemoryUtilizationPercentage: 80
+
+nodeSelector: {}
+
+tolerations: []
+
+affinity: {}

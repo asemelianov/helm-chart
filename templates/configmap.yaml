@@ -1,0 +1,10 @@
+{{- $kindName := include "formatName" (print .Release.Name) -}}
+{{- $templateMetadata := omit (fromYaml (include "metadata" .)) "namespace" -}}
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  {{- include "metadata" . | nindent 2 }}
+  name: {{ $kindName | toYaml }}
+data:
+{{- include "envsConfigmap" . | nindent 2 }}

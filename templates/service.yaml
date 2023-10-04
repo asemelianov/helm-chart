@@ -1,0 +1,19 @@
+{{- $kindName := include "formatName" (print .Release.Name) -}}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  {{- include "metadata" . | nindent 2 }}
+  name: {{ $kindName | toYaml }}
+spec:
+{{- if .Values.serviceRefactor.ports }}
+  ports:
+{{- range .Values.serviceRefactor.ports }}
+  - name: {{ .name }}
+    port: {{ .port }}
+    protocol: {{ .protocol }}
+    targetPort: {{ .targetPort }}
+{{- end }}
+{{- end }}
+  selector:
+    {{- include "selectorLabels" . | nindent 4 }}

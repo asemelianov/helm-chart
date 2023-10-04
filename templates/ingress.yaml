@@ -1,0 +1,55 @@
+{{- if .Values.ingress.enabled -}}
+{{- $kindName := include "formatName" (print .Release.Name) -}}
+{{- $svcPort := .Values.service.port -}}
+{{- if and .Values.ingress.className (not (semverCompare ">=1.18-0" .Capabilities.KubeVersion.GitVersion)) }}
+  {{- if not (hasKey .Values.ingress.annotations "kubernetes.io/ingress.class") }}
+  {{- $_ := set .Values.ingress.annotations "kubernetes.io/ingress.class" .Values.ingress.className}}
+  {{- end }}
+{{- end }}
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: {{ $kindName }}
+  labels:
+    {{- include "labels" . | nindent 4 }}
+    {{- include "selectorLabels" . | nindent 4 }}
+  {{- with .Values.ingress.labels }}
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+  annotations:
+  {{- if .Values.ingress.rewrite }}
+    nginx.ingress.kubernetes.io/rewrite-target: {{ .Values.ingress.rewrite }}
+  {{- end }}
+  {{- if .Values.ingress.tls }}
+  {{- if .Values.ingress.tls.cert_manager_issuer }}
+    cert-manager.io/cluster-issuer: {{ .Values.ingress.tls.cert_manager_issuer }}
+  {{- end }}
+  {{- end }}
+  {{- with .Values.ingress.annotations }}
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+spec:
+  {{- if and .Values.ingress.className (semverCompare ">=1.18-0" .Capabilities.KubeVersion.GitVersion) }}
+  ingressClassName: {{ .Values.ingress.className }}
+  {{- end }}
+  {{- if .Values.ingress.tls }}
+  tls:
+    - hosts:
+        - "{{ .Values.domain }}"
+      secretName: {{ .Values.ingress.tls.secretName }}
+  {{- end }}
+  rules:
+    - host: "{{ .Values.domain }}"
+      http:
+        paths:
+          - path: {{ .Values.ingress.path }}
+            pathType: {{ .Values.ingress.pathType | default "Prefix" }}
+            backend:
+              service:
+                name: {{ $kindName }}
+                port:
+                  number: {{ $svcPort }}
+              {{- else }}
+              serviceName: {{ $kindName }}
+              servicePort: {{ $svcPort }}
+{{- end }}
